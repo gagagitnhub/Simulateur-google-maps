@@ -1,9 +1,9 @@
-# Base de données SQLite (volumineuse)
+# Base de données SQLite
 *.db
 *.sqlite
 *.sqlite3
 
-# Données CSV (volumineuses)
+# Données CSV
 *.csv
 
 # Binaires
