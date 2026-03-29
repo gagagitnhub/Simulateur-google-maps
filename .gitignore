@@ -1,0 +1,28 @@
+# Base de données SQLite (volumineuse)
+*.db
+*.sqlite
+*.sqlite3
+
+# Données CSV (volumineuses)
+*.csv
+
+# Binaires
+*.exe
+
+# Fichiers d'état et temporaires
+.last_poll
+detecteur_state.json
+
+# Rapports générés automatiquement
+rapports/
+
+# Environnements virtuels Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Fichiers système
+.DS_Store
+Thumbs.db

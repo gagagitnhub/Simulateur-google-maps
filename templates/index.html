@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartographie des Commerces - Maroc</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --light: #ecf0f1;
+            --warning: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            flex: 1;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .stat-card p {
+            margin: 0.2rem 0 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 1rem;
+            height: calc(100vh - 180px);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #map {
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 1;
+        }
+
+        form div {
+            margin-bottom: 0.8rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.2rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 0.7rem;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #219150;
+        }
+
+        .btn-refresh {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .scroll-table {
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.6rem;
+            border-bottom: 1px solid var(--light);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .status-tag {
+            padding: 0.1rem 0.4rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .flash {
+            padding: 0.8rem;
+            border-radius: 4px;
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Map controls hint */
+        .map-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>📍 Cartographie des Commerces - Maroc</h1>
+    </header>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <h3>Total Points</h3>
+                <p id="stat-total">{{ stats.total }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Points Actifs</h3>
+                <p id="stat-actifs" style="color: var(--success);">{{ stats.actifs }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Villes Couvertes</h3>
+                <p id="stat-zones" style="color: var(--warning);">...</p>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="sidebar">
+                <div class="card">
+                    <h2>Ajouter un Point 🛠️</h2>
+                    <form action="/add" method="post" id="add-form">
+                        <div>
+                            <label>Nom du Commerce *</label>
+                            <input type="text" name="nom" required placeholder="Ex: Café de la Paix">
+                        </div>
+                        <div>
+                            <label>Zone / Ville *</label>
+                            <input type="text" name="zone" id="input-zone" required placeholder="Ex: Casablanca">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <div style="flex: 1;">
+                                <label>Catégorie</label>
+                                <select name="categorie">
+                                    <option value="Café">Café</option>
+                                    <option value="Pharmacie">Pharmacie</option>
+                                    <option value="Restaurant">Restaurant</option>
+                                    <option value="Épicerie">Épicerie</option>
+                                    <option value="Supermarché">Supermarché</option>
+                                    <option value="Boulangerie">Boulangerie</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Type</label>
+                                <select name="type">
+                                    <option value="Formel">Formel</option>
+                                    <option value="Informel">Informel</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <div style="flex: 1;">
+                                <label>Latitude *</label>
+                                <input type="number" step="any" name="latitude" id="input-lat" required
+                                    placeholder="33.589">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Longitude *</label>
+                                <input type="number" step="any" name="longitude" id="input-lon" required
+                                    placeholder="-7.606">
+                            </div>
+                        </div>
+                        <p style="font-size: 0.7rem; color: #666; margin: 0.5rem 0;">💡 Astuce : Cliquez sur la carte
+                            pour remplir les coordonnées.</p>
+                        <button type="submit" class="submit-btn">➕ Enregistrer le point</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Supprimer un Point 🗑️</h2>
+                    <form action="/delete" method="post">
+                        <div>
+                            <label>Méthode de recherche</label>
+                            <select name="method" id="delete-method">
+                                <option value="nom">Par Nom exact</option>
+                                <option value="coords">Par Coordonnées (lat, lon)</option>
+                                <option value="id">Par Identifiant (ID)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label id="label-target">Nom du commerce</label>
+                            <input type="text" name="target" id="input-delete-target" required
+                                placeholder="Saisissez le nom exactement">
+                        </div>
+                        <button type="submit" class="submit-btn" style="background-color: var(--accent);">❌ Supprimer
+                            définitivement</button>
+                    </form>
+                </div>
+                <h2>Dernières Activités <button class="btn-refresh" onclick="location.reload()">🔄</button></h2>
+                <div class="scroll-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th width="80">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activity-table">
+                            {% for point in recent_points %}
+                            <tr>
+                                <td>
+                                    <strong>{{ point.nom }}</strong><br>
+                                    <small style="color: #666;">{{ point.zone }}</small>
+                                </td>
+                                <td style="text-align: right;">
+                                    <form action="/delete" method="post" style="display:inline-block; margin:0">
+                                        <input type="hidden" name="method" value="id">
+                                        <input type="hidden" name="target" value="{{ point.id }}">
+                                        <button type="submit" title="Supprimer ce point"
+                                            style="background:none; border:none; cursor:pointer; color:var(--accent); font-size: 1.2rem;">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Colonne Droite : Carte -->
+            <div id="map"></div>
+            <div class="map-hint">Initialisation de la carte...</div>
+        </div>
+
+        <!-- Section Liste Complète -->
+        <div class="card" style="margin-top: 1.5rem; overflow-x: auto;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                <h2 style="margin:0; border-bottom: none;">📋 Liste complète des points en base</h2>
+                <div style="font-size: 0.8rem; color: #666;">Total : {{ all_points|length }} points</div>
+            </div>
+            <table style="font-size: 0.85rem;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Zone</th>
+                        <th>Catégorie</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Date Création</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="full-list-table">
+                    {% for point in all_points %}
+                    <tr>
+                        <td><code>{{ point.id }}</code></td>
+                        <td style="font-weight: bold;">{{ point.nom }}</td>
+                        <td>{{ point.zone }}</td>
+                        <td><span class="status-tag status-active" style="background:#e3f2fd; color:#0d47a1">{{
+                                point.categorie }}</span></td>
+                        <td>{{ point.latitude }}</td>
+                        <td>{{ point.longitude }}</td>
+                        <td style="color: #666; font-size: 0.75rem;">{{ point.date_creation[:16].replace('T', ' ') }}
+                        </td>
+                        <td>
+                            <form action="/delete" method="post" style="margin:0">
+                                <input type="hidden" name="method" value="id">
+                                <input type="hidden" name="target" value="{{ point.id }}">
+                                <button type="submit"
+                                    style="background:none; border:none; cursor:pointer; color:var(--accent); font-weight:bold;">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+
+    <!-- Scripts Cartographiques -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+        // Initialisation de la carte centrée sur le Maroc
+        const map = L.map('map').setView([31.7917, -7.0926], 6);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const markers = L.markerClusterGroup({
+            chunkedLoading: true,
+            maxClusterRadius: 50
+        });
+
+        // Fonction pour charger les points via l'API
+        async function loadPoints() {
+            const hint = document.querySelector('.map-hint');
+            hint.innerText = "Chargement des données depuis l'API...";
+
+            try {
+                const response = await fetch('/api/points');
+                const points = await response.json();
+
+                hint.innerText = `Affichage de ${points.length} points sur la carte.`;
+
+                // Calculer le nombre de zones
+                const zones = new Set(points.map(p => p.zone)).size;
+                document.getElementById('stat-zones').innerText = zones;
+
+                points.forEach(p => {
+                    if (p.latitude && p.longitude) {
+                        const marker = L.marker([p.latitude, p.longitude]);
+                        marker.bindPopup(`
+                            <div style="min-width: 150px;">
+                                <strong>${p.nom}</strong><br>
+                                <small>${p.categorie} (${p.type})</small><br>
+                                <em>${p.zone}</em><br><br>
+                                <form action="/delete" method="post" style="margin:0">
+                                    <input type="hidden" name="method" value="id">
+                                    <input type="hidden" name="target" value="${p.id}">
+                                    <button type="submit" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; width:100%">🗑️ Supprimer</button>
+                                </form>
+                            </div>
+                        `);
+                        markers.addLayer(marker);
+                    }
+                });
+
+                map.addLayer(markers);
+            } catch (error) {
+                console.error("Erreur de chargement:", error);
+                hint.innerText = "Erreur lors du chargement des points.";
+            }
+        }
+
+        // Interaction : cliquer sur la carte remplit le formulaire
+        map.on('click', function (e) {
+            document.getElementById('input-lat').value = e.latlng.lat.toFixed(6);
+            document.getElementById('input-lon').value = e.latlng.lng.toFixed(6);
+
+            // Notification visuelle discrète
+            const hint = document.querySelector('.map-hint');
+            hint.innerText = "Coordonnées capturées : " + e.latlng.lat.toFixed(4) + ", " + e.latlng.lng.toFixed(4);
+            setTimeout(() => { hint.innerText = markers.getLayers().length + " points affichés."; }, 3000);
+        });
+
+        // Script pour changer le label du formulaire de suppression
+        document.getElementById('delete-method').addEventListener('change', function (e) {
+            const labels = {
+                'nom': 'Nom du commerce',
+                'coords': 'Coordonnées (ex: 33.5, -7.6)',
+                'id': 'ID du point (ex: PDV-XXXX)'
+            };
+            document.getElementById('label-target').innerText = labels[e.target.value];
+            document.getElementById('input-delete-target').placeholder = "Saisissez " + labels[e.target.value].toLowerCase();
+        });
+
+        // Lancer le chargement
+        loadPoints();
+    </script>
+</body>
+
+</html>
